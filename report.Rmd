@@ -1,22 +1,22 @@
 ---
-title: "DataScience Capstone"
+title: "Yelp Dataset Challenge - Identifying Review Patterns"
 author: "Christoph Fabianek"
-date: "15.11.2015"
-output: pdf_document
+date: "Sunday, November 22nd, 2015"
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Introduction
+This report addresses the following question: 
+Do businesses (in the same or in different geographic locations / with same or different categories) share review patterns (stars, number of reviews, number of tips) over time? I want to find out if and how well it is possible to predict ratings for a business based on existing yelp reviews from other businesses.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Methods
+my approach
 
-```{r}
-summary(cars)
-```
+## Results
+some insights
 
-You can also embed plots, for example:
-
-```{r, echo=FALSE}
-plot(cars)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Discussion
+what did we learn

@@ -1,28 +1,76 @@
-slides
+Yelp Dataset Challenge: Review Patterns
 ========================================================
-author: 
-date: 
+author: Christoph Fabianek
+date: Sunday, November 22nd, 2015
 
-First Slide
-========================================================
-
-For more details on authoring R presentations click the
-**Help** button on the toolbar.
-
-- Bullet 1
-- Bullet 2
-- Bullet 3
-
-Slide With Code
+Introduction
 ========================================================
 
-```{r}
-summary(cars)
+* Coursera Data Science Capstone Project
+    - using data from the *Yelp Dataset Challenge*
+* Primary Question:   
+    *Do seasonal review patterns exists in the Yelp Dataset?*
+
+Methods
+========================================================
+
+Some Yelp categories show patterns in average quarterly ratings.  
+
+```{r init,fig.width=10, fig.height=4, dpi=300, out.width="1200px", out.height="350px", cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+library(jsonlite)
+library(dplyr)
+library(zoo)
+library(ggplot2)
+library(knitr)
+library(gridExtra)
+
+load("~/Documents/coursera/dataScience/Capstone/DataScience_Capstone/season_small.RData")
+p1 <- ggplot(data=agg_categories, aes(x=quarter, y=rating, group=category, color=category)) + 
+        geom_line() + geom_point() + xlab("Year / Quarter") + ylab("average rating") + 
+        labs(title="Average Ratings per Quarter") + 
+        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+        theme(legend.position="bottom")
+p2 <- ggplot(data=agg_sport, aes(x=quarter, y=rating, group=1)) + 
+        geom_line() + geom_point() + xlab("Year / Quarter") + ylab("average rating") + 
+        labs(title="Sport Ratings per Quarter") + 
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+grid.arrange(p1, p2, ncol=2)
 ```
 
-Slide With Plot
+A T-Test shall answer the question if those patterns for Yelp sports categories have a significant relation to the time of the year (season).
+
+Results
 ========================================================
 
-```{r, echo=FALSE}
-plot(cars)
+**Null Hypothesis $H_0$**:  
+The season (time of the year) has no effect on sports activity ratings.  
+
+**T-Test Result**:
+```{r ttest, cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+t <- t.test(agg_sport$rating, agg_restaurant$rating, 
+            paired = FALSE, var.equal = FALSE)
+result <- data.frame("p-value" = t$p.value, 
+                     "CI.low" = t$conf[1], "CI.high" = t$conf[2])
+kable(result, format = 'html')
 ```
+
+**Interpretation**:  
+the confidence interval does not contain 0 and the p-value is less than 5% so $H_0$ can be rejected
+
+
+Discussion
+========================================================
+
+**Answer to the primary question:**  
+The season has an effect on sports activity ratings. 
+
+**Interpretation:**  
+Ratings are higher at the begin of the year (maybe this is releated to New Year's resolutions  / positive spirit on starting a new activity)
+
+
+**Assumptions for T-Test:**  
+
+* experiment was done with a random assignment of participants
+* the sample ratings are representative for the overall population 
+

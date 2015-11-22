@@ -1,22 +1,133 @@
 ---
-title: "DataScience Capstone"
+title: "Yelp Dataset Challenge - Seasonal Patterns"
 author: "Christoph Fabianek"
-date: "15.11.2015"
-output: pdf_document
+date: "Sunday, November 22nd, 2015"
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r init, cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+library(jsonlite)
+library(dplyr)
+library(zoo)
+library(ggplot2)
+library(knitr)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+load("~/Documents/coursera/dataScience/Capstone/DataScience_Capstone/season.RData")
+# load data
+#biz_file <- "yelp_academic_dataset_business.json"
+#dat_biz <- stream_in(file(biz_file))
+#rvw_file <- "yelp_academic_dataset_review.json"
+#dat_rvw <- stream_in(file(rvw_file))
 
-```{r}
-summary(cars)
+# merge data with reviews
+#biz <- merge(dat_rvw, dat_biz, by="business_id")
+#biz[,"quarter"] <- factor(as.yearqtr(biz$date, format="%Y-%m-%d"))
+#biz <- biz[as.POSIXct(biz$date) < as.POSIXct("2015-01-01") & 
+#           as.POSIXct(biz$date) >= as.POSIXct("2006-01-01") ,]
+
+#--subset by category
+#biz_restaurant    <- biz[grep("restaurant", biz$categories, ignore.case=TRUE),]
+#biz_food          <- biz[grep("food", biz$categories, ignore.case=TRUE),]
+#biz_nightlife     <- biz[grep("nightlife", biz$categories, ignore.case=TRUE),]
+#biz_active_life   <- biz[grep("active life", biz$categories, ignore.case=TRUE),]
+#biz_beauty        <- biz[grep("beauty", biz$categories, ignore.case=TRUE),]
+#--aggregate data
+#agg_restaurant    <- biz_restaurant    %>% group_by(quarter) %>% summarise(rating=mean(stars.x)) %>% mutate(category="Restaurant")
+#agg_food          <- biz_food          %>% group_by(quarter) %>% summarise(rating=mean(stars.x)) %>% mutate(category="Food")
+#agg_nightlife     <- biz_nightlife     %>% group_by(quarter) %>% summarise(rating=mean(stars.x)) %>% mutate(category="Nightlife")
+#agg_active_life   <- biz_active_life   %>% group_by(quarter) %>% summarise(rating=mean(stars.x)) %>% mutate(category="Active Life")
+#agg_beauty        <- biz_beauty        %>% group_by(quarter) %>% summarise(rating=mean(stars.x)) %>% mutate(category="Beauty")
+#agg_categories <- rbind(agg_restaurant, agg_food, agg_nightlife, agg_active_life, agg_beauty)
+
+#--sport group
+#sport_cats <- c("Active Life", "Gyms", "Fitness & Instruction", "Pilates", "Yoga", "Weight Loss Centers")
+#biz_sport  <- biz[grep(paste(sport_cats, collapse="|"), biz$categories, ignore.case=TRUE), ]
+#agg_sport  <- biz_sport %>% group_by(quarter) %>% summarise(rating=mean(stars.x), count=n())
 ```
 
-You can also embed plots, for example:
+## Introduction
+This report addresses the following question: *Do seasonal review patterns exists in the Yelp Dataset?* I investigate businesses in different categories to search for patterns in the number of reviews and in the star rating. Identified patterns are afterwards tested for statistical significance using hypothesis testing.  
 
-```{r, echo=FALSE}
-plot(cars)
+This report was written for the *Coursera Data Science Specialization* and is based on data from the *Yelp Dataset Challenge*. The underlying source files are available on Github: https://github.com/fabianekc/DataScience_Capstone
+
+
+## Methods
+I started with some data exploration and the plot below shows the star rating for 6 categories with a high number of ratings.
+
+```{r exploreCategories, fig.height=5.5, fig.width=7, cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=agg_categories, aes(x=quarter, y=rating, group=category, color=category)) + 
+        geom_line() + geom_point() + xlab("Year / Quarter") + ylab("average rating") + 
+        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+        theme(legend.position="bottom")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+From a first look we see that *Active Life* shows a lot of variation. For a further exploration I combined similiar categories to get a larger sample. The group **Sports** includes in the following anlysis these Yelp categories:  
+
+* Active Life
+* Gyms
+* Fitness & Instruction
+* Pilates
+* Yoga
+* Weight Loss Centers
+
+The following graph shows the average ratings per quarter for the group *Sports*.
+
+```{r exploreSports, fig.height=4, fig.width=7, cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=agg_sport, aes(x=quarter, y=rating, group=1)) + 
+        geom_line() + geom_point() + xlab("Year / Quarter") + ylab("average rating") + 
+        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+        theme(legend.position="bottom")
+```
+
+To address the question of a seasonal review pattern for sport categories I formulate the following null hypothesis:  
+
+$H_0$: The season (time of the year) has no effect on sports activity ratings.
+
+A T-Test is used to compare the average ratings for sport categories against average ratings for restaurants (restaurant ratings have the most steady average ratings as shown in the first figure). Before we perform the T-Test we need to check the following assumptions:
+
+* the two populations being compared should follow a normal distribution  
+```{r hist, fig.height=3, fig.width=7, cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+par(mfrow=c(1,2))
+hist(agg_sport$rating, main="Sport", xlab="Rating")
+hist(agg_restaurant$rating, main="Restaurant", xlab="Rating")
+```
+
+* the two populations being compared should have the same variance  
+```{r variance, fig.height=3, fig.width=7, cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+par(mfrow=c(1,2))
+qqnorm(agg_sport$rating, col = "blue")
+qqline(agg_sport$rating, col = "green", main="Sport")
+qqnorm(agg_restaurant$rating, col = "blue")
+qqline(agg_restaurant$rating, col = "green", main="Restaurant")
+```
+
+* the data ushed should be sampled independently from the two populations being compared
+
+## Results
+$H_0$: The season (time of the year) has no effect on sports activity ratings.  
+
+*T-Test Result*:
+
+```{r ttest, fig.height=3, fig.width=7, cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+t <- t.test(agg_sport$rating, agg_restaurant$rating, 
+            paired = FALSE, var.equal = FALSE)
+result <- data.frame("p-value" = t$p.value, 
+                     "CI.low" = t$conf[1], "CI.high" = t$conf[2])
+kable(result, format = 'pandoc')
+```
+
+*Interpretation*: the confidence interval does not contain 0 and the p-value is less than 5% so $H_0$ can be rejected
+
+
+## Discussion
+So I can answer the primary question of this report that the season (time of the year) has an effect on sports activity ratings. We have seen that ratings are usually higher at the begin of the year and this is maybe releated to New Year's resolutions and the positive spirit when starting a new activity.
+
+Of course all of this is only true under the following assumptions:
+
+* the experiment was performed with a random assignment of participants
+* the sample ratings are representative for the overall population 
+

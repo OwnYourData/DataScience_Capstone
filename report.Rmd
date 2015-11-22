@@ -1,9 +1,5 @@
 ---
-<<<<<<< HEAD
-title: "Yelp Dataset Challenge - Identifying Review Patterns"
-=======
 title: "Yelp Dataset Challenge - Seasonal Patterns"
->>>>>>> master
 author: "Christoph Fabianek"
 date: "Sunday, November 22nd, 2015"
 output:
@@ -12,20 +8,6 @@ output:
     keep_md: yes
 ---
 
-<<<<<<< HEAD
-## Introduction
-This report addresses the following question: 
-Do businesses (in the same or in different geographic locations / with same or different categories) share review patterns (stars, number of reviews, number of tips) over time? I want to find out if and how well it is possible to predict ratings for a business based on existing yelp reviews from other businesses.
-
-## Methods
-my approach
-
-## Results
-some insights
-
-## Discussion
-what did we learn
-=======
 ```{r init, cache = TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 # Libraries
 library(jsonlite)
@@ -149,4 +131,3 @@ Of course all of this is only true under the following assumptions:
 * the experiment was performed with a random assignment of participants
 * the sample ratings are representative for the overall population 
 
->>>>>>> master

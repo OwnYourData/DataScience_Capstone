@@ -1,0 +1,7 @@
+base
+knitr
+jsonlite
+dplyr
+zoo
+ggplot2
+gridExtra
